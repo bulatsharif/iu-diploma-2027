@@ -99,10 +99,13 @@ def main():
             with path.open("w", encoding="utf-8") as stream:
                 for row in rows:
                     record = {
-                        "id": row["id"],
+                        "model": "qwen3-8b",
                         "messages": [{"role": "system", "content": system}] + row["messages"],
-                        "prompt_tokens": row["token_counts"][target],
-                        "target_tokens": target,
+                        "stream": True,
+                        "stream_options": {
+                            "include_usage": True, "continuous_usage_stats": True,
+                        },
+                        "chat_template_kwargs": {"enable_thinking": False},
                     }
                     stream.write(json.dumps(record, ensure_ascii=False) + "\n")
             print(f"Saved {path.relative_to(ROOT)}: {len(rows)} requests")
@@ -114,6 +117,13 @@ def main():
         "tokenizer": "models/Qwen3-8B", "enable_thinking": False,
         "min_prompt_tokens": MIN_TOKENS, "max_prompt_tokens": MAX_TOKENS,
         "counts": selected_counts(selected),
+        "requests": {
+            lang: [
+                {"id": row["id"], "prompt_tokens": row["token_counts"]}
+                for row in rows
+            ]
+            for lang, rows in selected.items()
+        },
     }
     (output_dir / "metadata.json").write_text(
         json.dumps(metadata, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
