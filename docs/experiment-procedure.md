@@ -50,19 +50,46 @@
 
 Во всех режимах держим разминку 30 секунд, затем подаём основную нагрузку 120 секунд. Таймаут запроса и `benchmark_grace_period` оставляем по умолчанию. После 120 секунд новые запросы не отправляются, но ответы, полученные в течение grace period (по умолчанию 30 секунд), входят в итоговые метрики AIPerf. Это 120 секунд подачи нагрузки, а не строгий срез метрик по 120-й секунде; см. [описание параметров AIPerf 0.13.0](https://github.com/ai-dynamo/aiperf/blob/v0.13.0/docs/cli-options.md#--benchmark-grace-period-float).
 
-Пример замера одного профиля:
+Установка зависимостей в существующее окружение:
 
 ```bash
-.venv/bin/aiperf profile \
-  --model qwen3-8b --tokenizer models/Qwen3-8B \
-  --url http://localhost:8000 --endpoint-type chat \
-  --input-file data/prompts/ru_100.jsonl --custom-dataset-type raw_payload \
-  --streaming --use-server-token-count --per-chunk-usage \
-  --request-rate 1 --arrival-pattern poisson \
-  --warmup-duration 30 --benchmark-duration 120
+uv pip install --python .venv/bin/python -r requirements.txt
 ```
 
-Для других RPS меняем `--request-rate`; для последовательного режима заменяем `--request-rate 1 --arrival-pattern poisson` на `--concurrency 1`. В `--input-file` передаём один JSONL-файл профиля: в [режиме raw payload](https://github.com/ai-dynamo/aiperf/blob/v0.13.0/docs/tutorials/raw-payload-replay.md) каталог трактуется как набор многошаговых сессий.
+В первом терминале запускаем модель без драфтера и ждём готовности сервера:
+
+```bash
+bash scripts/serve_baseline.sh
+```
+
+По умолчанию используется GPU 0; другой GPU можно выбрать через `CUDA_VISIBLE_DEVICES`. Сервер остаётся запущенным на время всех замеров.
+
+Во втором терминале можно запустить один профиль:
+
+```bash
+bash scripts/benchmark.sh ru_100 rps 1
+bash scripts/benchmark.sh en_500 concurrency 1
+```
+
+Аргументы: профиль `{ru,en}_{100,500,1000}`, режим `rps` или `concurrency`, значение нагрузки. Необязательный четвёртый аргумент — каталог результатов; по умолчанию создаётся каталог с датой и параметрами прогона внутри `results/`. Адрес сервера по умолчанию — `http://localhost:8000`, переопределяется через `BENCHMARK_URL`.
+
+Для всей сетки нагрузок и сборки трёх таблиц запускаем:
+
+```bash
+.venv/bin/python scripts/run_benchmarks.py
+```
+
+Скрипт последовательно выполняет 36 прогонов одного уже запущенного деплоя: 2 языка × 3 длины × (`concurrency=1` и RPS 1, 2, 4, 8, 16). Это около 90 минут подачи нагрузки и разминки, плюс запуск AIPerf и ожидание ответов. Все прогоны используют 30 секунд разминки и 120 секунд основной нагрузки.
+
+Другие значения нагрузки и каталог результатов можно задать явно:
+
+```bash
+.venv/bin/python scripts/run_benchmarks.py --rps 1 2 4 --concurrency 1 2 --output-dir results/baseline
+```
+
+Каталог для всей серии должен быть новым. Итог — `results/<дата>/tables.md` с тремя таблицами и отдельные каталоги прогонов с исходными отчётами AIPerf, включая `profile_export_aiperf.json`. Таблицы обновляются после каждого успешного прогона. TPOT берём из `inter_token_latency`; длину ответа — из `output_sequence_length`. Без драфтера метрики принятия отмечаются `—`.
+
+`benchmark.sh` передаёт AIPerf один JSONL-файл в [формате raw payload](https://github.com/ai-dynamo/aiperf/blob/v0.13.0/docs/tutorials/raw-payload-replay.md), включает streaming и использует серверные счётчики токенов.
 
 ### Логируемые метрики
 
