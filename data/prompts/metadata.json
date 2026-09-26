@@ -1,0 +1,17 @@
+{
+  "dataset": "allenai/WildChat-1M",
+  "dataset_revision": "7d6490e462285cf85d91eabea0f9a954fbddcd1f",
+  "source_file": "data/train-00000-of-00014.parquet",
+  "config": "default",
+  "split": "train",
+  "rows_scanned": 5316,
+  "selection": "First 100 distinct matching histories per language, ending with the last user message.",
+  "tokenizer": "models/Qwen3-8B",
+  "enable_thinking": false,
+  "min_prompt_tokens": 70,
+  "max_prompt_tokens": 130,
+  "counts": {
+    "ru": 100,
+    "en": 100
+  }
+}
