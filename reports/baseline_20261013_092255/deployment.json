@@ -1,0 +1,77 @@
+{
+  "started_at": "2026-10-13T09:23:10.769174+00:00",
+  "git_commit": "db899801ab688ea7c2183785430fa5430bb46a93",
+  "gpu_index": 2,
+  "gpu_status_at_start": "0, GPU-8a4e0d38-0de0-3b32-253c-929bb7c739b1, NVIDIA H100 80GB HBM3, 75575 MiB, 100 %\n1, GPU-4f3fce55-8555-ed87-1821-0759f4f2d2c3, NVIDIA H100 80GB HBM3, 75741 MiB, 100 %\n2, GPU-b5a1cb2c-80b0-5313-f91c-c0b9b0f87db9, NVIDIA H100 80GB HBM3, 0 MiB, 0 %\n3, GPU-de73b1c4-f970-e6c8-0910-4c79283368e7, NVIDIA H100 80GB HBM3, 0 MiB, 0 %\n4, GPU-291b5e73-c6ed-df58-9c8e-d6edc7d8f5a8, NVIDIA H100 80GB HBM3, 75269 MiB, 0 %\n5, GPU-2acdc74e-277d-bf2b-1031-794e5d701c62, NVIDIA H100 80GB HBM3, 71765 MiB, 0 %\n6, GPU-a74545b6-dd77-e20a-9662-d5fb49ded2ca, NVIDIA H100 80GB HBM3, 71765 MiB, 0 %\n7, GPU-33ca6c4c-60cb-e33f-b276-9731904a1031, NVIDIA H100 80GB HBM3, 71765 MiB, 0 %\n",
+  "model": "models/Qwen3-8B",
+  "drafter": null,
+  "dtype": "bfloat16",
+  "prefix_caching": false,
+  "packages": {
+    "vllm": "0.30.0",
+    "aiperf": "0.13.0",
+    "torch": "2.13.0",
+    "transformers": "5.17.0"
+  },
+  "server_command": "CUDA_VISIBLE_DEVICES=2 bash scripts/serve_baseline.sh",
+  "benchmark_command": "CUDA_VISIBLE_DEVICES=2 .venv/bin/python -u scripts/run_benchmarks.py --output-dir /workspace/tasks/Thesis/results/baseline_20261013_092255/benchmarks",
+  "input_sha256": {
+    "data/prompts/en_100.jsonl": "7e05f47cf41074090b670f90de672ac8ef3777594a375447c6b5d1e6c654d41f",
+    "data/prompts/en_1000.jsonl": "0097789ac8341272ca954282be6a690e58c7b1a2eeb92e0073d15468724eb8c9",
+    "data/prompts/en_500.jsonl": "188327b85766ecaf3e4d5eeca2ee25a3e685d63c7b17b752c4b5c3d0fa80b7e9",
+    "data/prompts/metadata.json": "3c24694b92f1ea16732df7d89629121922cc7e5226847002f983f850eb4c7948",
+    "data/prompts/ru_100.jsonl": "c610f661260fab5c71929c1a70eaf9fd27cfb8feb1c18893e42a6efa6e797271",
+    "data/prompts/ru_1000.jsonl": "53f7490046bcf976853d49e84b4c8e9f7d50e6070733f5dda0062979abf0c85a",
+    "data/prompts/ru_500.jsonl": "55ef764fcbb7eb2b441d2c005c359f6195e3777d79dab5c4c5466d9f3ba908b4"
+  },
+  "script_sha256": {
+    "scripts/benchmark.sh": "bda3f9a14c0d952af4182fe1ef0e0d0895869083aa6e27bcb71d45b8fb1f71ef",
+    "scripts/prepare_wildchat_prompts.py": "354e9fd8136700a3915fcc0c24ae34dc25d687eb95a0d03f422d3bb8e22d9645",
+    "scripts/run_benchmarks.py": "e9e4c278901eeab36e0d374f1d56a484887e8e47cc68487e13bea6159d2f0c5a",
+    "scripts/serve_baseline.sh": "2ab666d622472da4d96caa3a8272e3f4c1cf00875730128b62251a955e28522e"
+  },
+  "model_config": {
+    "architectures": [
+      "Qwen3ForCausalLM"
+    ],
+    "attention_bias": false,
+    "attention_dropout": 0.0,
+    "bos_token_id": 151643,
+    "eos_token_id": 151645,
+    "head_dim": 128,
+    "hidden_act": "silu",
+    "hidden_size": 4096,
+    "initializer_range": 0.02,
+    "intermediate_size": 12288,
+    "max_position_embeddings": 40960,
+    "max_window_layers": 36,
+    "model_type": "qwen3",
+    "num_attention_heads": 32,
+    "num_hidden_layers": 36,
+    "num_key_value_heads": 8,
+    "rms_norm_eps": 1e-06,
+    "rope_scaling": null,
+    "rope_theta": 1000000,
+    "sliding_window": null,
+    "tie_word_embeddings": false,
+    "torch_dtype": "bfloat16",
+    "transformers_version": "4.51.0",
+    "use_cache": true,
+    "use_sliding_window": false,
+    "vocab_size": 151936
+  },
+  "generation_config": {
+    "bos_token_id": 151643,
+    "do_sample": true,
+    "eos_token_id": [
+      151645,
+      151643
+    ],
+    "pad_token_id": 151643,
+    "temperature": 0.6,
+    "top_k": 20,
+    "top_p": 0.95,
+    "transformers_version": "4.51.0"
+  },
+  "benchmark_started_at": "2026-10-13T09:28:38.006589+00:00"
+}
