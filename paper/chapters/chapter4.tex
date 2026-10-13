@@ -1,0 +1,43 @@
+\chapter{Implementation}
+\label{chap:impl}
+
+\section{Repository organization}
+The implementation separates prompt preparation, model serving, load generation and result reporting. The reviewed repository snapshot is commit \texttt{3bd7f18}; the baseline manifest records experiment commit \texttt{db89980} with an additional archived launcher patch~\cite{repo,baseline}. These identifiers describe different stages of the same experiment record and should not be interchanged.
+
+The core files are:
+\begin{itemize}[noitemsep]
+\item \path{scripts/prepare_wildchat_prompts.py}: dataset filtering, chat-template token counting and request-file generation;
+\item \path{scripts/serve_baseline.sh} and \path{scripts/serve_dflash.sh}: target-only and speculative server launchers;
+\item \path{scripts/benchmark.sh}: one AIPerf workload invocation;
+\item \path{scripts/run_benchmarks.py}: sequential execution of the 36-condition grid and incremental report generation;
+\item \path{reports/baseline_20261013_092255/}: the archived manifest, 36 JSON summaries, request counts and formatted tables.
+\end{itemize}
+The thesis tables and figures are generated from these archived summaries. A separate script supplied with the manuscript extracts the measurements into a CSV file and rebuilds the presentation without running model inference.
+
+\section{Prompt preparation and load generation}
+The preparation stage constructs chat requests using the local Qwen tokenizer. System instructions vary by language and approximate response length. Each resulting JSONL file contains 100 request payloads, with thinking disabled. Input metadata records selection parameters and token-length statistics, allowing the intended workload to be checked before serving.
+
+The benchmark sends streaming requests to the local OpenAI-compatible chat endpoint. Server token counts and per-chunk usage are enabled. The runner changes the prompt file and load mode while keeping one deployment active. Each series uses its own output directory; the runner writes tables as conditions finish so that partial progress remains inspectable~\cite{procedure,repo}.
+
+A run-level completion flag only indicates that the benchmark process produced a completed report. It does not establish that every submitted request finished. The baseline demonstrates why the implementation must retain request-level completion counters alongside the metric summaries.
+
+\section{Baseline launcher and provenance}
+The target-only launcher loads Qwen3-8B in BF16, disables prefix caching and retains the normal CUDA-graph execution path. Sampling uses the recorded generation defaults: temperature 0.6, top-$p$ 0.95 and top-$k$ 20. The manifest also records model configuration, package versions, launch commands and hashes of the prompt files and scripts~\cite{baseline}.
+
+The archived \path{launch-fix.patch} removes a speculative-metrics option from the no-drafter launcher. This patch is part of the measured configuration. Reproducing only the experiment commit without its patch would therefore omit a recorded change. The input and script checksums in the archive match the corresponding files in the reviewed snapshot.
+
+The manifest is a useful starting point but not a complete environment lock. Future deployments should additionally preserve checkpoint revisions, resolved engine arguments, hardware and driver details, random seeds and the exact benchmark output directory. Raw request traces and server logs should accompany the summary tables.
+
+\section{Prepared DFlash integration}
+A DFlash launcher already exists. It references a local copy of the Qwen3-8B DFlash block-size-16 checkpoint and requests 15 speculative tokens~\cite{procedure,dflashmodel}. It also enables the speculative-metrics collection needed for acceptance statistics.
+
+The procedure documents a compatibility workaround: disabling FlashInfer autotuning avoids a startup test that exceeds the draft model's supported context in the installed setup. CUDA graphs remain enabled~\cite{procedure}. This setting is specific to the prepared speculative launcher; its existence does not show that the baseline used the same setting.
+
+A matched target-only control with autotuning disabled is therefore required before attributing a measured difference entirely to DFlash. The experiment should first verify startup, valid responses and populated draft counters, then run the complete workload grid. No such results are present in the reviewed archive.
+
+\pending{E2: run the matched control and DFlash series; add the final checkpoint revision, server command, draft length, acceptance metrics, quality checks and performance comparison.}
+
+\section{Remaining integration work}
+Engine tuning will expose a small, documented configuration search rather than changing several unrecorded defaults at once. Quantized candidates require compatible model formats and kernels, plus a separate quality evaluation. Kernel or scheduler changes will be justified by measured bottlenecks. EAGLE-3, DSpark and an SGLang engine comparison are conditional extensions, subject to compatible checkpoints, implementation support and the available experiment budget.
+
+The final integration must preserve a switch for each retained component. This makes it possible to compare the complete pipeline with versions that remove quantization, speculation or a kernel change. Each experiment will produce the same reporting schema, with additional acceptance and quality fields when applicable. The implementation will retain unsuccessful configurations and regressions as evidence about compatibility and workload dependence.

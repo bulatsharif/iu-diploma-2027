@@ -1,0 +1,24 @@
+\begin{table}[htbp]
+\centering
+\caption{Recorded baseline environment}
+\label{tab:environment}
+\begin{singlespace}
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}lp{10cm}@{}}
+\toprule
+Item & Recorded value \\
+\midrule
+GPU & 1 NVIDIA H100, 80 GB HBM3 \\
+Model and precision & Qwen3-8B, BF16; no drafter \\
+Runtime & vLLM 0.30.0; AIPerf 0.13.0 \\
+Supporting packages & PyTorch 2.13.0; Transformers 5.17.0 \\
+Execution & CUDA graphs enabled; prefix caching disabled \\
+Generation & Thinking disabled; temperature 0.6 \\
+Sampling & Top-$p$ 0.95; top-$k$ 20; model EOS defaults \\
+\bottomrule
+\end{tabular}
+
+\end{singlespace}
+\end{table}

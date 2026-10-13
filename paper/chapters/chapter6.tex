@@ -1,0 +1,10 @@
+\chapter{Conclusion}
+\label{chap:conclusion}
+
+This thesis investigates a staged optimization process combining serving configuration, speculative decoding, quantization and targeted GPU execution changes. The intended contribution is evidence about which combinations improve end-to-end performance under defined quality and completion constraints.
+
+The completed work establishes bilingual workloads, a benchmark procedure and 36 Qwen3-8B BF16 baseline measurements on one H100. The analysis identifies variable response lengths, an anomalous concurrency-one run and substantial cancellations in one high-load condition. These limitations require validation before final comparisons.
+
+The remaining work is to repeat the baseline, evaluate the prepared DFlash integration with matched controls, and test supported precision and engine configurations. Profiling, component-removal experiments and held-out quality evaluation will support the final conclusions.
+
+\pending{Final conclusion: insert measured answers to RQ1--RQ3, supported performance gains, quality and completion constraints, and remaining limitations.}

@@ -1,0 +1,42 @@
+\appendix
+\chapter{Complete Baseline Results}
+\label{app:baseline}
+
+The following tables reproduce all 36 conditions from the archived baseline~\cite{baseline}. Quantiles are p50/p95/p99. The tables retain the exported values; they do not recompute throughput from elapsed wall time. Concurrency one (C1) is a closed-loop condition, while the other rows identify offered Poisson RPS.
+
+Acceptance rate and acceptance length are not applicable to every row because the baseline has no drafter. Latency and output-length distributions describe completed requests. Table~\ref{tab:counts} lists the corresponding request outcomes; those counts must be consulted when interpreting high-load percentiles. A zero error count does not imply zero cancellations.
+
+\input{tables/counts}
+\clearpage
+\begin{landscape}
+\input{tables/full_100}
+\clearpage
+\input{tables/full_500}
+\clearpage
+\input{tables/full_1000}
+\end{landscape}
+
+\chapter{Evidence and Completion Checklist}
+\label{app:checklist}
+
+\section{Traceability}
+The reviewed repository snapshot is \nolinkurl{3bd7f18d184cdad8101fff41fdf53125a0fe085f}. The experiment manifest records \nolinkurl{db899801ab688ea7c2183785430fa5430bb46a93}, supplemented by \path{launch-fix.patch}. The primary source directory is \path{reports/baseline_20261013_092255/}~\cite{baseline}.
+
+The manuscript source package contains the extracted measurements in \path{data/baseline.csv} and their provenance in \path{data/provenance.json}. The script \path{scripts/build_results.py} checks request counters and generates the numerical tables from the repository archive. Its companion \path{scripts/plot_results.py} rebuilds the figures from the CSV. This separation allows manuscript updates without rerunning inference.
+
+\section{Outstanding evidence}
+The draft uses explicit \textbf{[Pending: ...]} markers. They identify missing evidence rather than predicted results. The following checklist should be closed before submission:
+\begin{enumerate}[noitemsep]
+\item P1: complete the environment and checkpoint record.
+\item E0: repeat and validate the baseline, including the anomalous English 500-token run.
+\item Q1: define and execute quality evaluation and establish latency/completion targets.
+\item E1: establish a tuned target-only baseline.
+\item E2: evaluate DFlash with a matched control and valid acceptance counters.
+\item E3: evaluate supported quantized models against BF16.
+\item E4: profile the retained configurations and measure justified kernel or scheduler changes.
+\item E5: evaluate the complete pipeline and component-removal controls.
+\item E6: test the configuration-selection rule on reserved workloads.
+\item Replace the provisional conclusion with evidence-based answers; confirm the supervisor and final institutional cover requirements.
+\end{enumerate}
+
+The quality suite, exact search space and any additional model or GPU remain to be selected. These choices should be recorded before the corresponding comparisons so that the final thesis clearly separates exploratory tuning from validation.

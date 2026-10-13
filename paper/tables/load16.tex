@@ -1,0 +1,23 @@
+\begin{table}[htbp]
+\centering
+\caption{Baseline at 16 offered requests/s}
+\label{tab:load16}
+\begin{singlespace}
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+Profile & TTFT p99 (ms) & Latency p99 (s) & Tokens/s & Done/sent \\
+\midrule
+RU 100 & 25.73 & 2.54 & 1628.00 & 1878/1878 \\
+EN 100 & 26.50 & 3.78 & 1866.97 & 1955/1955 \\
+RU 500 & 39.74 & 8.70 & 6876.25 & 1953/1956 \\
+EN 500 & 41.94 & 10.98 & 7219.03 & 1950/1952 \\
+RU 1000 & 99.37 & 26.33 & 11729.77 & 1936/1938 \\
+EN 1000 & 12180.92 & 62.72 & 10856.48 & 1626/1972 \\
+\bottomrule
+\end{tabular}
+
+\end{singlespace}
+\end{table}

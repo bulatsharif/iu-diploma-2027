@@ -1,0 +1,23 @@
+\begin{table}[htbp]
+\centering
+\caption{Baseline at concurrency one}
+\label{tab:c1}
+\begin{singlespace}
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+Profile & TPOT p50 & Latency p50 & Tokens/s & Output p50 & Done/sent \\
+\midrule
+RU 100 & 6.50 & 0.65 & 150.26 & 98 & 169/169 \\
+EN 100 & 6.50 & 0.68 & 150.55 & 103 & 135/135 \\
+RU 500 & 6.58 & 3.43 & 151.22 & 520 & 34/34 \\
+EN 500 & 6.57 & 3.42 & 41.31 & 520 & 12/13 \\
+RU 1000 & 6.59 & 5.82 & 151.14 & 882 & 22/22 \\
+EN 1000 & 6.59 & 6.36 & 151.25 & 965 & 19/19 \\
+\bottomrule
+\end{tabular}
+\par\smallskip\raggedright TPOT is in milliseconds; response latency is in seconds. Profile numbers denote requested output targets, not fixed lengths.
+\end{singlespace}
+\end{table}

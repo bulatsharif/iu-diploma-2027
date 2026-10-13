@@ -1,0 +1,42 @@
+\chapter{Literature Review}
+\label{chap:lr}
+
+\section{Autoregressive inference}
+An autoregressive language model generates a sequence by conditioning each token on the prompt and preceding outputs. For prompt $x$ and output $y_{1:m}$,
+\begin{equation}
+p(y_{1:m}\mid x)=\prod_{t=1}^{m}p(y_t\mid x,y_{<t}).
+\end{equation}
+This dependency limits straightforward parallel generation. A key--value (KV) cache stores attention keys and values so that previous token states can be reused. Its size grows with sequence length and the number of active requests. The resulting performance depends on model operations, memory traffic and the serving engine's ability to batch work~\cite{vllm,specdec}.
+
+Prefill exposes parallel work across input tokens, whereas conventional decoding advances each active sequence one token at a time. These phases therefore need separate attention when interpreting measurements. The present benchmark emphasizes decoding through short prompts and progressively longer requested responses; it does not characterize long-context prefill performance.
+
+\section{Serving engines and scheduling}
+vLLM introduced PagedAttention, which manages the KV cache in blocks to reduce fragmentation and redundant storage~\cite{vllm}. Better memory management permits more requests to be served together. However, an engine comparison must specify batch limits, model precision, cache policy and workload: a throughput figure is not an intrinsic property of the engine name.
+
+SGLang combines a language for structured LLM programs with an execution runtime. Its RadixAttention mechanism reuses cached prefixes across requests~\cite{sglang}. This is relevant to applications with shared prompts and branching generation. The present baseline disables prefix caching, which limits the influence of repeated prompts but also excludes an important optimization opportunity. A future cache-enabled experiment must define prefix reuse explicitly.
+
+Sarathi-Serve studies the interaction between prompt processing and decoding through chunked prefill and scheduling~\cite{sarathi}. Its results motivate evaluating throughput together with latency rather than selecting a configuration solely by tokens per second. For this thesis, engine tuning includes batching limits and compatible execution settings, followed by measurements at the same offered loads. SGLang and scheduler modifications remain unmeasured extensions.
+
+\section{Speculative decoding}
+Speculative decoding uses a cheaper draft mechanism to propose several tokens and the target model to verify them together. With an appropriate acceptance and correction rule, exact speculative sampling preserves the target sampling distribution~\cite{specdec}. For a proposed token drawn from draft distribution $q$, the acceptance probability is $\min(1,p/q)$, with rejected proposals corrected using the positive residual between target and draft probabilities. This property concerns the specified target distribution; changing the target through quantization requires a separate quality assessment.
+
+Acceleration depends on draft cost, verification cost and the number of useful tokens accepted per verification step. A high acceptance rate alone does not establish a speedup. At greater serving load, verification can consume execution capacity that would otherwise serve other requests.
+
+EAGLE-3 replaces feature prediction with direct token prediction and combines features from multiple target-model layers. Its training-time test mechanism supports learning under conditions closer to inference~\cite{eagle3}. It provides a relevant comparison for learned autoregressive drafting.
+
+DFlash instead uses a lightweight block-diffusion model to draft tokens in parallel, conditioned on target-model context features~\cite{dflash}. This reduces sequential work within the drafter. A Qwen3-8B-compatible DFlash checkpoint is available, and the thesis repository includes a launcher using 15 speculative tokens~\cite{dflashmodel,procedure}. The existence of that launcher does not constitute a completed performance evaluation.
+
+DSpark combines parallel drafting with a lightweight sequential component and adapts verification length using confidence and serving-load information~\cite{dspark}. It motivates studying verification efficiency under concurrency. A compatible implementation and checkpoint for the thesis setup must be confirmed before treating it as an experimental baseline.
+
+\section{Quantization}
+Quantization represents model parameters or activations at lower precision. It can reduce memory requirements and enable faster supported operations, but the result depends on the available kernels and the cost of scaling and conversion. AWQ uses activation information to guide low-bit weight quantization, while SmoothQuant redistributes activation outliers to enable 8-bit weight-and-activation computation~\cite{awq,smoothquant}.
+
+The planned study will evaluate supported FP8 and low-bit alternatives to BF16. Each candidate must be specified by the tensors quantized, calibration procedure and execution backend. Lower storage cost will not be treated as evidence of lower latency. Quantization also changes numerical outputs and potentially draft--target agreement, making its interaction with speculative decoding an experimental question.
+
+\section{Attention kernels and GPU execution}
+FlashAttention-3 targets Hopper GPUs using asynchronous execution and specialized kernel pipelines~\cite{fa3}. FlashAttention-4 studies different bottlenecks on Blackwell hardware~\cite{fa4}; it is relevant background, but Blackwell-only results cannot establish performance on the H100 used here. FlashInfer provides attention implementations for serving workloads with different cache layouts and dynamic sequence shapes~\cite{flashinfer}.
+
+Kernel selection should follow profiling. Faster attention may produce a small end-to-end improvement when another operation or CPU scheduling dominates. Conversely, a custom fused kernel can be useful when it removes repeated memory transfers or launch overhead from a frequently executed path. The thesis will compare kernel time and complete-request performance wherever custom changes are introduced.
+
+\section{Research gap addressed by this thesis}
+The literature provides strong techniques at multiple levels of the inference stack. It also demonstrates that hardware, workload and scheduling conditions affect reported gains. This thesis addresses the practical problem of composing those techniques under one reproducible protocol. The central evidence will be individual, cumulative and component-removal comparisons, coupled with quality and completion measurements. Until those comparisons are completed, the contribution is an experimental framework and baseline characterization rather than a demonstrated universal acceleration method.

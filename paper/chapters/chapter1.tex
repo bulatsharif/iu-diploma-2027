@@ -1,0 +1,28 @@
+\chapter{Introduction}
+\label{chap:intro}
+
+\section{Motivation}
+Large language models (LLMs) support conversational assistants, coding tools and applications that make repeated generation calls. Their usefulness depends on response quality and on how quickly a serving system can process requests. Sequential token generation makes long responses expensive in time, while growing demand requires the same GPU resources to serve many users. Efficient inference therefore requires attention to both individual response latency and aggregate throughput~\cite{vllm,dflash}.
+
+An inference request has two principal phases. During \emph{prefill}, the model processes the input and constructs attention states. During \emph{decode}, it generates output tokens while reusing those states. A deployment must also allocate memory, schedule requests and transfer responses to clients. Improving one component can expose a different bottleneck, and increasing batch size can improve aggregate throughput while increasing the time experienced by each user~\cite{sarathi}.
+
+Several optimization families address this problem. Serving engines manage batches and attention caches; quantization reduces numerical precision; speculative decoding verifies multiple proposed tokens together; and specialized GPU kernels improve execution of individual operations. The practical question is how these techniques interact in a complete deployment.
+
+\section{Research problem and scope}
+This thesis studies a profiling-guided optimization pipeline: establish a reproducible baseline, identify bottlenecks, evaluate individual techniques, combine compatible changes and remeasure the whole system. The word \emph{pipeline} refers here to this sequence of optimization and evaluation stages. It does not imply that every technique must be enabled or that model layers are distributed through pipeline parallelism.
+
+The initial experimental scope is deliberately concrete: Qwen3-8B, one H100 GPU, Russian and English requests, and short inputs. The repository currently contains a complete baseline series and scripts for a DFlash deployment~\cite{repo,baseline}. Comparisons with SGLang, quantized models, alternative drafters and custom kernels are planned extensions. Claims about other model sizes, long contexts or GPU architectures will require additional experiments.
+
+\section{Research questions}
+\begin{enumerate}[label=\textbf{RQ\arabic*.}]
+\item What latency and throughput gains can a coordinated optimization pipeline achieve over default and tuned serving baselines, subject to a defined output-quality constraint?
+\item Which optimization combinations produce complementary gains, diminishing returns or regressions, and what measured bottlenecks explain these interactions?
+\item How does the preferred configuration change with language, output length and offered load, and can workload-based selection improve performance on held-out requests?
+\end{enumerate}
+
+\section{Contributions and current status}
+The intended contribution is a reproducible empirical method for selecting and combining inference optimizations under a common workload and evaluation protocol. Existing serving systems already integrate multiple techniques, so integration alone is insufficient as a novelty claim~\cite{vllm,sglang,flashinfer}. The research contribution will depend on explaining interactions, documenting unsuccessful combinations and establishing useful selection rules.
+
+The work completed at this stage comprises a versioned workload-construction procedure, a benchmark runner, a recorded deployment configuration and 36 baseline reports. The draft adds an organized analysis of those reports. No end-to-end optimization speedup or quality-preservation result has yet been established in the repository snapshot reviewed here.
+
+\pending{E1--E6: complete the optimization experiments and replace the intended contributions with findings supported by measurements.}

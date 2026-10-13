@@ -1,0 +1,75 @@
+\chapter{Methodology}
+\label{chap:met}
+
+\section{Study design}
+The unit of comparison is a fixed \emph{deployment}: target checkpoint, numerical precision, serving engine, draft checkpoint if present, and server settings. Each deployment is evaluated over the same workload grid. Results from different deployments must retain separate identifiers so that configuration changes cannot be mistaken for workload effects~\cite{procedure}.
+
+The implemented baseline is denoted $B_0$. A tuned baseline $B_1$ will preserve the target model and precision while searching serving settings. Subsequent stages will evaluate speculative decoding, quantization and targeted kernel or scheduling changes. The final pipeline will be compared with both $B_0$ and $B_1$, so that gains from ordinary parameter tuning can be distinguished from gains due to additional methods.
+
+\section{Model and recorded environment}
+The target is the dense Qwen3-8B model~\cite{qwenmodel,qwenreport}. The recorded local configuration contains 36 layers, hidden dimension 4096, 32 attention query heads, 8 KV heads and head dimension 128. These values are reported from the experiment manifest rather than inferred from a generic model family description~\cite{baseline}.
+
+\input{tables/environment}
+
+The manifest identifies GPU 2 on a multi-GPU host. Other GPUs were occupied at startup, but shared CPU and memory contention were not measured. The record does not establish exclusive use of the entire host. Runtime package versions in Table~\ref{tab:environment} are distinct from version strings embedded in the downloaded model configuration.
+
+\pending{P1: record CPU and host-memory specifications, driver and CUDA versions, GPU power/clock settings, model and tokenizer revisions, and the resolved server configuration for future series.}
+
+\section{Workload construction}
+Requests are selected from WildChat-1M, a dataset of human--ChatGPT conversations~\cite{wildchat}. The preparation script pins dataset revision \nolinkurl{7d6490e462285cf85d91eabea0f9a954fbddcd1f} and reads its first Parquet shard. It scans 5,316 rows and selects the first 100 distinct eligible histories in Russian and 100 in English~\cite{procedure,repo}.
+
+Each history ends at its last user message; later dataset responses are excluded. Conversation and last-user language labels must agree, message roles must be supported, and empty messages are rejected. Each selected history is tested with all three language-specific system instructions. The complete formatted input, including the chat template, must remain between 70 and 130 tokens in every profile. Thus the six request files contain 200 underlying histories reused across three output-length instructions, not 600 independent histories.
+
+Thinking is disabled through the chat-template setting. Output targets of approximately 100, 500 and 1000 tokens are expressed through system instructions. They are not hard generation limits: end-of-sequence behavior and sampling remain active, and actual output lengths are measured. The three targets should therefore be interpreted as workload labels.
+
+\input{tables/prompts}
+
+The workloads have similar input-token ranges but are not paired translations. In particular, the English 1000-token instruction increases mean input length relative to the other English profiles. Differences between Russian and English results can reflect prompt content, output lengths and sampling as well as language.
+
+\section{Load protocol}
+Every deployment is tested in $2\times3\times6=36$ conditions: two languages, three output targets and six load modes. The first mode maintains one outstanding request (concurrency one). The other five modes use Poisson arrivals at 1, 2, 4, 8 and 16 requested arrivals per second (RPS)~\cite{procedure}.
+
+Concurrency one is a closed-loop test: a completion permits the next request. Fixed RPS is open-loop: arrivals continue while earlier work remains unfinished. These conditions must be analyzed separately.
+
+Each run has a 30-second warmup and 120 seconds of main load submission. AIPerf permits up to 30 additional seconds for outstanding work to finish. The resulting metrics are not a strict snapshot at second 120. The runner executes conditions sequentially against one already-started server. A full grid has 90 minutes of nominal warmup and submission time, with additional drain and tooling overhead. The archived baseline series lasted approximately 160 minutes in total.
+
+\section{Metric definitions}
+Time to first token (TTFT) measures the client-observed delay before the first content is received. Request latency measures time to the end of the response. These are end-to-end measurements rather than isolated GPU execution times.
+
+The repository calls AIPerf's \path{inter_token_latency} metric time per output token (TPOT). For request $i$, its implementation computes~\cite{aiperfitl}
+\begin{equation}
+\mathrm{TPOT}_i=\frac{L_i-F_i}{N_i-C_i},
+\end{equation}
+where $L_i$ is request latency, $F_i$ is TTFT, $N_i$ is output-token count and $C_i$ is the first content chunk's token count. When that count is unavailable or inconsistent, the implementation falls back to one. The benchmark requests per-chunk usage. Reported TPOT percentiles summarize these per-request averages; they do not describe the distribution of every individual inter-chunk gap.
+
+The tables report the median (p50), 95th (p95) and 99th (p99) percentiles. Quantiles cannot generally be combined algebraically: median TPOT multiplied by median output length need not equal median request latency.
+
+Output throughput is taken directly from the exported AIPerf \path{output_token_throughput} field. Its implementation divides aggregate output-token count by the metric observation duration~\cite{aiperftps}. That duration should not be replaced with a hard-coded 120 seconds or assumed equal to the separately exported \path{benchmark_duration}. Cancelled requests and the drain period affect interpretation. Submitted, completed, cancelled and error counts are therefore reported alongside throughput.
+
+For speculative deployments, let $A_i$, $D_i$ and $V_i$ be accepted draft tokens, proposed draft tokens and verification steps for request $i$. The planned run-level acceptance metrics are~\cite{aiperfspec}
+\begin{align}
+\mathrm{AcceptanceRate}&=100\frac{\sum_i A_i}{\sum_i D_i},\\
+\mathrm{AcceptanceLength}&=1+\frac{\sum_i A_i}{\sum_i V_i}.
+\end{align}
+The latter includes one bonus token per verification step according to the tool's accounting. These are ratios of aggregated counters rather than averages of per-request percentages. Both are not applicable to a deployment without a drafter.
+
+\section{Optimization and comparison protocol}
+The proposed process starts with validation and repeated measurements of $B_0$. Engine settings are then searched to establish $B_1$. Speculative and quantized candidates are first tested individually, followed by compatible combinations. Profiling determines whether a kernel or scheduling change is justified. After each stage, the same end-to-end grid is rerun and any regression is retained in the record.
+
+For a latency statistic $L$ and throughput $T$, comparisons use
+\begin{equation}
+S_L=\frac{L_{\mathrm{baseline}}}{L_{\mathrm{candidate}}},\qquad
+S_T=\frac{T_{\mathrm{candidate}}}{T_{\mathrm{baseline}}}.
+\end{equation}
+The workload, load mode, metric definition and completion policy must match. A configuration that changes output length or cancels more requests cannot be declared better from its latency ratio alone. Fixed-length diagnostic runs may be added as a separate experiment; they will not silently replace the instruction-based baseline.
+
+Component-removal experiments will compare the full configuration with versions that remove one optimization at a time. Selected pairwise experiments will help determine whether improvements compose and whether optimization order matters. For RQ3, configuration rules will be selected using development workloads and evaluated on newly reserved histories that were not used for tuning.
+
+\pending{E1--E6: specify search ranges, compatible combinations and the final workload-selection rule. Run at least three independently seeded repetitions of retained configurations and report run-to-run uncertainty.}
+
+\section{Quality and validity controls}
+The archive contains no quality scores. Future experiments must define a separate quality evaluation and acceptable degradation before configuration selection. Exact speculative sampling does not establish downstream quality: quantized targets still require comparison with BF16.
+
+\pending{Q1: choose quality tasks, language coverage, decoding settings and an acceptable score-change threshold. Define latency and completion targets before making a constrained-throughput claim.}
+
+One run per condition, small low-concurrency samples and first-shard selection limit statistical precision and representativeness. The archive lacks request traces and successful GPU telemetry; it cannot establish queue dynamics, peak memory or operation-level bottlenecks. Repetition, longer load tests and profiling are required.

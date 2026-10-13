@@ -1,0 +1,23 @@
+\begin{table}[htbp]
+\centering
+\caption{Prepared input lengths, including the chat template}
+\label{tab:prompts}
+\begin{singlespace}
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+Language & Output target & Histories & Min. & Mean & Max. \\
+\midrule
+RU & 100 & 100 & 70 & 86.78 & 120 \\
+RU & 500 & 100 & 71 & 87.78 & 121 \\
+RU & 1000 & 100 & 71 & 87.78 & 121 \\
+EN & 100 & 100 & 70 & 85.85 & 116 \\
+EN & 500 & 100 & 71 & 86.85 & 117 \\
+EN & 1000 & 100 & 84 & 99.85 & 130 \\
+\bottomrule
+\end{tabular}
+\par\smallskip\raggedright Lengths are tokens. The same 100 histories per language are reused for each output target.
+\end{singlespace}
+\end{table}

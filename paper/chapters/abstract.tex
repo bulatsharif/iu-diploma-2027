@@ -1,0 +1,7 @@
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+Large language model inference involves interacting computational, memory and scheduling costs. This thesis investigates a systematic pipeline for improving GPU inference through serving-engine configuration, speculative decoding, quantization, optimized kernels and scheduling changes. The objective is to identify combinations that improve latency and throughput while preserving an explicitly defined level of output quality.
+
+The implemented experimental foundation uses Qwen3-8B in BF16 on one NVIDIA H100 80 GB GPU, served by vLLM and measured with AIPerf. A reproducible workload contains 100 Russian and 100 English WildChat histories, short inputs, and three instruction-based output-length targets. The first baseline series comprises 36 load conditions. Across that series, 22,459 of 22,843 submitted requests completed; 384 were cancelled after the benchmark grace period. The results establish reference measurements and expose output-length variation and high-load degradation that subsequent comparisons must control.
+
+This initial draft documents the methodology, implemented benchmark and available baseline results. Optimized configurations, quality evaluation, repeated trials and final conclusions remain pending. Their locations and required evidence are marked explicitly throughout the text.
